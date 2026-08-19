@@ -17,7 +17,7 @@ export default async function handler(req, res) {
   const query = url.searchParams.toString();
   const search = query ? "?" + query : "";
 
-  const missing = ["CALIBRATE_API_KEY", "CALIBRATE_API_URL", "CALIBRATE_LABELLING_URL"]
+  const missing = ["CALIBRATE_API_KEY", "CALIBRATE_API_URL", "CALIBRATE_APP_URL"]
     .filter((name) => !process.env[name]);
   if (missing.length) {
     return res.status(500).json({ detail: `Not set on the server: ${missing.join(", ")}` });
@@ -26,7 +26,8 @@ export default async function handler(req, res) {
   // The page asks for this on load, so the address of the labelling site stays
   // a setting on the server instead of sitting in the published page.
   if (req.method === "GET" && path === "/config") {
-    return res.status(200).json({ labellingUrl: process.env.CALIBRATE_LABELLING_URL });
+    const app = process.env.CALIBRATE_APP_URL.replace(/\/$/, "");
+    return res.status(200).json({ labellingUrl: app + "/annotate-job/" });
   }
 
   if (!isAllowed(req.method, path)) return res.status(403).send("Not allowed");

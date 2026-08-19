@@ -27,7 +27,7 @@ All three live on the server, never in this repository.
 |---|---|
 | `CALIBRATE_API_KEY` | An API key from the Calibrate you are pointing at. |
 | `CALIBRATE_API_URL` | The Calibrate **API** address. Not the web app: those are two different addresses and two different ports when running locally. |
-| `CALIBRATE_LABELLING_URL` | The start of the link an annotator opens, ending in `/annotate-job/`. The job's token is added on the end. |
+| `CALIBRATE_APP_URL` | The Calibrate **web app** address, where annotators label. The app adds `/annotate-job/` and the job's token. |
 
 The page asks the proxy for the labelling address when it loads, so the
 address is never published in the page itself.
