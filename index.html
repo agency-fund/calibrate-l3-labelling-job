@@ -111,14 +111,8 @@
   #message { margin: 20px 0 0; color: var(--muted-foreground); }
   #message.error { color: #ef4444; }
 
-  #result { margin-top: 20px; }
-  .start {
-    display: flex; align-items: center; justify-content: center; height: 40px;
-    font-weight: 500; border-radius: 6px; text-decoration: none;
-    background: var(--foreground); color: var(--background);
-  }
-  .start:hover { opacity: .9; }
-  #link-text { margin: 8px 0 0; font-size: 12px; color: var(--muted-foreground); word-break: break-all; }
+  #message a { color: inherit; text-underline-offset: 2px; }
+  #message a:hover { opacity: .8; }
 </style>
 </head>
 <body>
@@ -172,11 +166,6 @@
   <button id="go" type="button" disabled>Get my labelling job</button>
 
   <p id="message"></p>
-
-  <div id="result" hidden>
-    <a id="link" class="start">Start labelling</a>
-    <p id="link-text"></p>
-  </div>
 </main>
 
 <script src="config.js"></script>
@@ -378,7 +367,6 @@ async function load() {
 
 async function assign() {
   goButton.disabled = true;
-  el("result").hidden = true;
   showMessage("Working...");
   try {
     const taskId = taskPicker.selected.id;
@@ -395,13 +383,13 @@ async function assign() {
       : (await callApi("/annotation-tasks/" + taskId + "/jobs",
           { annotator_ids: [annotatorId], select_all: true })).jobs[0].public_token;
 
-    const url = labellingUrl + token;
-    el("link").href = url;
-    el("link-text").textContent = url;
-    el("result").hidden = false;
     showMessage(existing
-      ? "You already have a job for this task. Here it is."
-      : "Your labelling job is ready.");
+      ? "You already have a job for this task. "
+      : "Your labelling job is ready. ");
+    const link = document.createElement("a");
+    link.href = labellingUrl + token;
+    link.textContent = "Start here.";
+    el("message").append(link);
   } catch (error) {
     showMessage(plainReason(error), true);
   }
