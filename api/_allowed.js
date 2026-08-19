@@ -7,7 +7,7 @@ const ROUTES = [
   "GET /annotators",
   "POST /annotators",
   "GET /annotation-tasks",
-  `GET /annotation-tasks/${UUID}/jobs`,
+  `GET /annotation-tasks/${UUID}`,
   `POST /annotation-tasks/${UUID}/jobs`,
 ].map((route) => new RegExp(`^${route}$`));
 

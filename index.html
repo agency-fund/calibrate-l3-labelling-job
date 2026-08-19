@@ -5,54 +5,171 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Get your labelling job</title>
 <style>
-  :root { color-scheme: light; --bg: #fff; --fg: #111; --line: #999; }
-  @media (prefers-color-scheme: dark) {
-    :root { color-scheme: dark; --bg: #111; --fg: #eee; --line: #555; }
+  :root {
+    color-scheme: light;
+    --background: #ffffff; --foreground: #1a1a1a; --muted: #f5f5f5;
+    --muted-foreground: #737373; --border: #e5e5e5; --accent: #f5f5f5;
   }
-  :root[data-theme="light"] { color-scheme: light; --bg: #fff; --fg: #111; --line: #999; }
-  :root[data-theme="dark"] { color-scheme: dark; --bg: #111; --fg: #eee; --line: #555; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --background: #0f0f0f; --foreground: #ededed; --muted: #1a1a1a;
+    --muted-foreground: #a3a3a3; --border: #262626; --accent: #1f1f1f;
+  } }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --background: #0f0f0f; --foreground: #ededed; --muted: #1a1a1a;
+    --muted-foreground: #a3a3a3; --border: #262626; --accent: #1f1f1f;
+  }
+
+  * { box-sizing: border-box; }
   body {
-    font: 16px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
-    margin: 0; padding: 32px 20px; display: flex; justify-content: center;
-    background: var(--bg); color: var(--fg);
+    margin: 0; padding: 40px 20px 64px;
+    background: var(--background); color: var(--foreground);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-size: 14px; line-height: 1.5;
+    display: flex; justify-content: center;
   }
   main { width: 100%; max-width: 420px; }
-  h1 { font-size: 22px; margin: 0 0 24px; }
-  label { display: block; font-weight: 600; margin: 20px 0 6px; }
-  select, input, button, .start {
-    width: 100%; box-sizing: border-box; font: inherit;
-    padding: 12px; border-radius: 8px; border: 1px solid var(--line);
-    background: var(--bg); color: var(--fg);
-  }
+
+  header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 32px; }
+  h1 { font-size: 20px; font-weight: 600; letter-spacing: -0.01em; margin: 0 0 4px; }
+  .subtitle { color: var(--muted-foreground); margin: 0; }
+
   #theme {
-    position: fixed; top: 12px; right: 12px; width: auto; margin: 0;
-    padding: 6px 10px; font-size: 14px; line-height: 1;
-    background: var(--bg); color: var(--fg); border: 1px solid var(--line); cursor: pointer;
+    width: 32px; height: 32px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    border: 0; border-radius: 6px; background: none; cursor: pointer;
+    color: var(--muted-foreground); transition: color .15s, background .15s;
   }
-  button, .start {
-    margin-top: 28px; border: 0; background: #1a56db; color: #fff;
-    font-weight: 600; cursor: pointer; text-align: center; text-decoration: none; display: block;
+  #theme:hover { color: var(--foreground); background: var(--muted); }
+  #theme svg { width: 16px; height: 16px; }
+
+  .field { margin-bottom: 20px; }
+  .label { display: block; font-weight: 500; margin-bottom: 6px; }
+
+  .picker { position: relative; }
+  .trigger {
+    width: 100%; height: 44px; padding: 0 16px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    font: inherit; text-align: left; cursor: pointer;
+    background: transparent; color: var(--foreground); border: 1px solid var(--border);
+    transition: border-color .15s;
   }
-  button:disabled { background: #999; cursor: not-allowed; }
-  #message { margin-top: 20px; }
-  #message.error { color: #b91c1c; }
-  #link-text { font-size: 13px; word-break: break-all; opacity: .7; }
+  .trigger:hover:not(:disabled) { border-color: var(--muted-foreground); }
+  .trigger:disabled { opacity: .5; cursor: not-allowed; }
+  .trigger .value { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .trigger .value.empty { color: var(--muted-foreground); }
+  .chevron { width: 20px; height: 20px; flex-shrink: 0; color: var(--muted-foreground); transition: transform .15s; }
+  .trigger[aria-expanded="true"] .chevron { transform: rotate(180deg); }
+
+  .panel {
+    position: absolute; top: calc(100% + 6px); left: 0; right: 0; z-index: 20;
+    background: var(--background); border: 1px solid var(--border); border-radius: 12px;
+    box-shadow: 0 20px 25px -5px rgb(0 0 0 / .12), 0 8px 10px -6px rgb(0 0 0 / .12);
+    overflow: hidden;
+  }
+  .panel-row { padding: 12px; border-bottom: 1px solid var(--border); }
+  .panel-row.add { display: flex; gap: 8px; }
+  .panel input {
+    width: 100%; min-width: 0; font: inherit;
+    background: var(--background); color: var(--foreground);
+    border: 1px solid var(--border); border-radius: 8px;
+  }
+  .panel input.search { height: 40px; padding: 0 16px; }
+  .panel input.new-name { height: 36px; padding: 0 12px; border-radius: 6px; }
+  .panel input::placeholder { color: var(--muted-foreground); }
+  .panel input:focus { outline: none; border-color: var(--muted-foreground); }
+  .add button {
+    height: 36px; padding: 0 16px; flex-shrink: 0;
+    font: inherit; font-weight: 500; border-radius: 6px; cursor: pointer;
+    background: var(--background); color: var(--foreground); border: 1px solid var(--border);
+    transition: background .15s;
+  }
+  .add button:hover:not(:disabled) { background: var(--muted); }
+  .add button:disabled { opacity: .5; cursor: not-allowed; }
+  .add-error { margin: 0; padding: 0 12px 12px; font-size: 12px; color: #ef4444; }
+
+  .options { max-height: 240px; overflow-y: auto; }
+  .option {
+    display: block; width: 100%; padding: 12px 16px; font: inherit; text-align: left;
+    background: none; border: 0; color: var(--foreground); cursor: pointer;
+    transition: background .15s;
+  }
+  .option:hover { background: var(--accent); }
+  .option[aria-selected="true"] { background: var(--accent); font-weight: 500; }
+  .status { padding: 12px 16px; color: var(--muted-foreground); }
+
+  #go {
+    width: 100%; height: 40px; margin-top: 28px;
+    font: inherit; font-weight: 500; border: 0; border-radius: 6px; cursor: pointer;
+    background: var(--foreground); color: var(--background);
+    transition: opacity .15s;
+  }
+  #go:hover:not(:disabled) { opacity: .9; }
+  #go:disabled { opacity: .5; cursor: not-allowed; }
+
+  #message { margin: 20px 0 0; color: var(--muted-foreground); }
+  #message.error { color: #ef4444; }
+
+  #result { margin-top: 20px; }
+  .start {
+    display: flex; align-items: center; justify-content: center; height: 40px;
+    font-weight: 500; border-radius: 6px; text-decoration: none;
+    background: var(--foreground); color: var(--background);
+  }
+  .start:hover { opacity: .9; }
+  #link-text { margin: 8px 0 0; font-size: 12px; color: var(--muted-foreground); word-break: break-all; }
 </style>
 </head>
 <body>
-<button id="theme" type="button" title="Switch between dark and light"></button>
-
 <main>
-  <h1>Get your labelling job</h1>
+  <header>
+    <div>
+      <h1>Get your labelling job</h1>
+      <p class="subtitle">Pick your name and a task to start labelling.</p>
+    </div>
+    <button id="theme" type="button" aria-label="Switch between dark and light"></button>
+  </header>
 
-  <label for="annotator">Your name</label>
-  <select id="annotator"><option value="">Loading...</option></select>
-  <input id="new-name" type="text" placeholder="Type your full name" hidden>
+  <div class="field">
+    <span class="label" id="name-label">Your name</span>
+    <div class="picker" id="name-picker">
+      <button type="button" class="trigger" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="name-label" disabled>
+        <span class="value empty">Loading...</span>
+        <svg class="chevron" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+        </svg>
+      </button>
+      <div class="panel" hidden>
+        <div class="panel-row">
+          <input class="search" type="text" placeholder="Search names" aria-label="Search names">
+        </div>
+        <div class="panel-row add">
+          <input class="new-name" type="text" placeholder="Your name, if it is not listed" aria-label="Add your name">
+          <button type="button" class="add-button">Add</button>
+        </div>
+        <p class="add-error" hidden></p>
+        <div class="options" role="listbox" aria-labelledby="name-label"></div>
+      </div>
+    </div>
+  </div>
 
-  <label for="task">Task</label>
-  <select id="task"><option value="">Loading...</option></select>
+  <div class="field">
+    <span class="label" id="task-label">Task</span>
+    <div class="picker" id="task-picker">
+      <button type="button" class="trigger" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="task-label" disabled>
+        <span class="value empty">Loading...</span>
+        <svg class="chevron" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+        </svg>
+      </button>
+      <div class="panel" hidden>
+        <div class="options" role="listbox" aria-labelledby="task-label"></div>
+      </div>
+    </div>
+  </div>
 
-  <button id="go" disabled>Get my labelling job</button>
+  <button id="go" type="button" disabled>Get my labelling job</button>
 
   <p id="message"></p>
 
@@ -70,12 +187,8 @@ const cfg = window.CALIBRATE;
 // used.
 const apiBase = ["localhost", "127.0.0.1"].includes(location.hostname) ? "/api" : cfg.apiBase;
 const el = (id) => document.getElementById(id);
-const annotatorSelect = el("annotator");
-const newName = el("new-name");
-const taskSelect = el("task");
 const goButton = el("go");
 
-let annotators = [];
 let labellingUrl = "";
 
 async function callApi(path, body) {
@@ -94,10 +207,15 @@ async function callApi(path, body) {
   return data;
 }
 
-function fill(select, options, placeholder) {
-  select.innerHTML = "";
-  select.append(new Option(placeholder, ""));
-  for (const [value, label] of options) select.append(new Option(label, value));
+function plainReason(error) {
+  const text = String(error.message || error);
+  if (error instanceof TypeError) return "Could not reach the proxy. Check it is running, and check apiBase in config.js.";
+  if (text.includes("Not set on the server")) return text;
+  if (text.includes("Could not reach Calibrate")) return text;
+  if (text.includes("no items selected")) return "This task has no items to label yet. Ask whoever set it up to add items.";
+  if (text.includes("API key")) return "The server does not have a valid Calibrate API key.";
+  if (text.includes("Not allowed")) return "The proxy address in config.js is wrong.";
+  return text;
 }
 
 function showMessage(text, isError) {
@@ -106,22 +224,139 @@ function showMessage(text, isError) {
   message.className = isError ? "error" : "";
 }
 
-function plainReason(error) {
-  const text = String(error.message || error);
-  if (error instanceof TypeError) return "Could not reach the proxy. Check it is running, and check apiBase in config.js.";
-  if (text.includes("no items selected")) return "This task has no items to label yet. Ask whoever set it up to add items.";
-  if (text.includes("Not set on the server")) return text;
-  if (text.includes("API key")) return "The server does not have a valid Calibrate API key.";
-  if (text.includes("Not allowed")) return "The server address in config.js is wrong.";
-  return text;
+// One dropdown, used for names and for tasks. The names one also carries a
+// search box and a row for adding a name, kept apart from the list itself so
+// the two are not mistaken for each other.
+function makePicker(rootId, placeholder, emptyText) {
+  const root = el(rootId);
+  const trigger = root.querySelector(".trigger");
+  const panel = root.querySelector(".panel");
+  const valueLabel = root.querySelector(".value");
+  const optionList = root.querySelector(".options");
+  const search = root.querySelector(".search");
+  let items = [];
+  let selected = null;
+
+  function render() {
+    const query = search ? search.value.trim().toLowerCase() : "";
+    const shown = query ? items.filter((i) => i.name.toLowerCase().includes(query)) : items;
+    optionList.textContent = "";
+    if (!shown.length) {
+      const status = document.createElement("div");
+      status.className = "status";
+      status.textContent = query ? "No matching names" : emptyText;
+      optionList.append(status);
+      return;
+    }
+    for (const item of shown) {
+      const option = document.createElement("button");
+      option.type = "button";
+      option.className = "option";
+      option.setAttribute("role", "option");
+      option.setAttribute("aria-selected", String(selected !== null && selected.id === item.id));
+      option.textContent = item.name;
+      option.addEventListener("click", () => picker.select(item));
+      optionList.append(option);
+    }
+  }
+
+  function setOpen(open) {
+    panel.hidden = !open;
+    trigger.setAttribute("aria-expanded", String(open));
+    if (open) {
+      render();
+      if (search) { search.value = ""; search.focus(); }
+    }
+  }
+
+  trigger.addEventListener("click", () => setOpen(panel.hidden));
+  if (search) search.addEventListener("input", render);
+  document.addEventListener("click", (event) => {
+    if (!root.contains(event.target)) setOpen(false);
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") setOpen(false);
+  });
+
+  const picker = {
+    get selected() { return selected; },
+    setItems(next) {
+      items = next;
+      trigger.disabled = false;
+      valueLabel.textContent = placeholder;
+      valueLabel.classList.add("empty");
+      render();
+    },
+    add(item) {
+      if (!items.some((i) => i.id === item.id)) items.unshift(item);
+    },
+    select(item) {
+      selected = item;
+      valueLabel.textContent = item.name;
+      valueLabel.classList.remove("empty");
+      setOpen(false);
+      validate();
+    },
+    failed() {
+      valueLabel.textContent = "Could not load";
+      valueLabel.classList.add("empty");
+      trigger.disabled = true;
+    },
+    close() { setOpen(false); },
+  };
+  return picker;
 }
 
+const namePicker = makePicker("name-picker", "Select your name", "No names yet. Add yours above.");
+const taskPicker = makePicker("task-picker", "Select a task", "No tasks yet.");
+
 function validate() {
-  const hasName = annotatorSelect.value === "new"
-    ? newName.value.trim().length > 0
-    : annotatorSelect.value !== "";
-  goButton.disabled = !(hasName && taskSelect.value !== "");
+  goButton.disabled = !(namePicker.selected && taskPicker.selected);
 }
+
+// Adding a name, inside the names dropdown.
+const namePanel = el("name-picker");
+const newNameInput = namePanel.querySelector(".new-name");
+const addButton = namePanel.querySelector(".add-button");
+const addError = namePanel.querySelector(".add-error");
+
+function showAddError(text) {
+  addError.textContent = text || "";
+  addError.hidden = !text;
+}
+
+async function addName() {
+  const name = newNameInput.value.trim();
+  if (!name) return;
+  addButton.disabled = true;
+  addButton.textContent = "Adding...";
+  showAddError("");
+  try {
+    let id;
+    try {
+      id = (await callApi("/annotators", { name })).uuid;
+    } catch (error) {
+      // The name is taken, most likely by this same person on an earlier
+      // visit. Re-read the list and use the one that is already there.
+      const existing = (await callApi("/annotators"))
+        .find((a) => a.name.toLowerCase() === name.toLowerCase());
+      if (!existing) throw error;
+      id = existing.uuid;
+    }
+    namePicker.add({ id, name });
+    namePicker.select({ id, name });
+    newNameInput.value = "";
+  } catch (error) {
+    showAddError(plainReason(error));
+  }
+  addButton.disabled = false;
+  addButton.textContent = "Add";
+}
+
+addButton.addEventListener("click", addName);
+newNameInput.addEventListener("keydown", (event) => {
+  if (event.key === "Enter") { event.preventDefault(); addName(); }
+});
 
 async function load() {
   try {
@@ -131,30 +366,14 @@ async function load() {
       callApi("/annotation-tasks?limit=1000"),
     ]);
     labellingUrl = settings.labellingUrl;
-    annotators = people;
-    fill(annotatorSelect, people.map((a) => [a.uuid, a.name]), "Select your name");
-    annotatorSelect.append(new Option("My name is not here", "new"));
-    fill(taskSelect, tasks.items.map((t) => [t.uuid, t.name]), "Select a task");
+    namePicker.setItems(people.map((a) => ({ id: a.uuid, name: a.name })));
+    taskPicker.setItems(tasks.items.map((t) => ({ id: t.uuid, name: t.name })));
   } catch (error) {
-    fill(annotatorSelect, [], "Could not load");
-    fill(taskSelect, [], "Could not load");
+    namePicker.failed();
+    taskPicker.failed();
     showMessage(plainReason(error), true);
   }
   validate();
-}
-
-async function findOrCreateAnnotator(name) {
-  try {
-    const created = await callApi("/annotators", { name });
-    return created.uuid;
-  } catch (error) {
-    // The name is already taken, most likely by this same person on an
-    // earlier visit. Re-read the list in case it was added after page load.
-    annotators = await callApi("/annotators");
-    const match = annotators.find((a) => a.name.toLowerCase() === name.toLowerCase());
-    if (match) return match.uuid;
-    throw error;
-  }
 }
 
 async function assign() {
@@ -162,13 +381,13 @@ async function assign() {
   el("result").hidden = true;
   showMessage("Working...");
   try {
-    const taskId = taskSelect.value;
-    const annotatorId = annotatorSelect.value === "new"
-      ? await findOrCreateAnnotator(newName.value.trim())
-      : annotatorSelect.value;
+    const taskId = taskPicker.selected.id;
+    const annotatorId = namePicker.selected.id;
 
-    const jobs = await callApi("/annotation-tasks/" + taskId + "/jobs");
-    const existing = jobs.find((job) =>
+    // The task's own page carries its jobs, and reading it is allowed with an
+    // API key, which reading the jobs list on its own is not.
+    const task = await callApi("/annotation-tasks/" + taskId);
+    const existing = (task.jobs || []).find((job) =>
       job.annotator_id === annotatorId && !String(job.public_token).startsWith("import:"));
 
     const token = existing
@@ -189,26 +408,23 @@ async function assign() {
   validate();
 }
 
+goButton.addEventListener("click", assign);
+
+// Dark and light, following the machine's setting until a choice is made.
 const themeButton = el("theme");
+const SUN = '<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386-1.591 1.591M21 12h-2.25m-.386 6.364-1.591-1.591M12 18.75V21m-4.773-4.227-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z" /></svg>';
+const MOON = '<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.72 9.72 0 0 1 18 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 0 0 3 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 0 0 9.002-5.998Z" /></svg>';
 const systemTheme = () => (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
 const currentTheme = () => document.documentElement.dataset.theme || systemTheme();
 
 function setTheme(theme) {
   document.documentElement.dataset.theme = theme;
   localStorage.setItem("theme", theme);
-  themeButton.textContent = theme === "dark" ? "Light" : "Dark";
+  themeButton.innerHTML = theme === "dark" ? SUN : MOON;
+  themeButton.setAttribute("aria-label", theme === "dark" ? "Switch to light mode" : "Switch to dark mode");
 }
 setTheme(localStorage.getItem("theme") || systemTheme());
 themeButton.addEventListener("click", () => setTheme(currentTheme() === "dark" ? "light" : "dark"));
-
-annotatorSelect.addEventListener("change", () => {
-  newName.hidden = annotatorSelect.value !== "new";
-  if (!newName.hidden) newName.focus();
-  validate();
-});
-newName.addEventListener("input", validate);
-taskSelect.addEventListener("change", validate);
-goButton.addEventListener("click", assign);
 
 load();
 </script>

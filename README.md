@@ -17,7 +17,7 @@ allowed page addresses, so browsers refuse to make the call. The proxy is not
 a browser, so it can call Calibrate freely, and it allows this page.
 
 The proxy will only pass on five calls: read annotators, add an annotator,
-read tasks, read a task's jobs, and create a job. Everything else is refused.
+read tasks, read one task, and create a job. Everything else is refused.
 
 ## Settings
 
@@ -91,4 +91,6 @@ The site is then at
 - Every item in the task is assigned, so all annotators label the same set.
 - Anyone who finds the proxy address can make those five calls without a key.
   At worst that means junk annotators or jobs. Nothing can be read beyond
-  annotators, tasks, and jobs, and nothing can be deleted.
+  annotators and tasks, and nothing can be deleted.
+- The existing-job check reads the task itself, because reading a task's job
+  list on its own needs a signed-in user, while reading the task does not.

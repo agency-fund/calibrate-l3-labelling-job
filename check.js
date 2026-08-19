@@ -8,7 +8,7 @@ for (const [method, path] of [
   ["GET", "/annotators"],
   ["POST", "/annotators"],
   ["GET", "/annotation-tasks"],
-  ["GET", `/annotation-tasks/${ID}/jobs`],
+  ["GET", `/annotation-tasks/${ID}`],
   ["POST", `/annotation-tasks/${ID}/jobs`],
 ]) assert.equal(isAllowed(method, path), true, `should allow ${method} ${path}`);
 
@@ -17,8 +17,8 @@ for (const [method, path] of [
   ["DELETE", `/annotation-tasks/${ID}/jobs/${ID}`],
   ["GET", "/agents"],
   ["GET", "/evaluators"],
-  ["GET", `/annotation-tasks/${ID}`],
   ["GET", `/annotation-tasks/${ID}/items`],
+  ["GET", `/annotation-tasks/${ID}/jobs`],
   ["POST", `/annotation-tasks/${ID}/jobs/extra`],
   ["GET", "/annotators/../agents"],
   ["GET", "/annotatorsX"],
