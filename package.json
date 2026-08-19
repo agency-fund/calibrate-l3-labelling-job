@@ -1,0 +1,5 @@
+{
+  "name": "calibrate-l3-labelling-job",
+  "private": true,
+  "type": "module"
+}
