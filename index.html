@@ -388,6 +388,8 @@ async function assign() {
       : "Your labelling job is ready. ");
     const link = document.createElement("a");
     link.href = labellingUrl + token;
+    link.target = "_blank";
+    link.rel = "noopener noreferrer";
     link.textContent = "Start here.";
     el("message").append(link);
   } catch (error) {
